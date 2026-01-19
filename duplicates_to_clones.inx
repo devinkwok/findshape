@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+    <name>Duplicates to clones</name>
+    <id>devinkwok.DuplicatesToClones</id>
+    <dependency type="executable" location="inx">duplicates_to_clones.py</dependency>
+    <param name="maxerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Maximum error at any given point for matching duplicates">0.1</param>
+    <param name="avgerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Average error allowed for matching duplicates">0.01</param>
+    <param name="unitinfo" type="description">Unit as defined in document (File->Document Properties).</param>
+    <param name="infotext" type="description" xml:space="preserve">
+        Finds objects that are the same shape as the first selected one, and replaces each with a clone of the selected one.
+        Finds duplicates with different rotations or flips, as long as they have the same or nearly the same vertices.
+    </param>
+    <effect>
+        <object-type>any</object-type>
+        <effects-menu>
+            <submenu name="Arrange"/>
+        </effects-menu>
+    </effect>
+    <script>
+        <command location="inx" interpreter="python">duplicates_to_clones.py</command>
+    </script>
+</inkscape-extension>
