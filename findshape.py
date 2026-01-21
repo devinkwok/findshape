@@ -67,6 +67,17 @@ class Shape:
             return self.make_transform(translate=self.centroid)
         return self.make_transform(translate=-self.centroid)
 
+    def resize_to(self, shape, return_inverse=False):
+        source_size = np.linalg.norm(self.points)
+        target_size = np.linalg.norm(shape.points)
+        if source_size <= 0 or target_size <= 0:
+            return self.make_transform()
+        scale_factor = target_size / source_size
+        self.points *= scale_factor
+        if return_inverse:
+            return self.make_transform(size=1 / scale_factor)
+        return self.make_transform(size=scale_factor)
+    
     def flip_and_rotate_to(self, shape, return_inverse=False):
         # orthogonal_procrustes finds R that minimizes || R A - B ||
         # where A and B are 2xn matrices and R is 2x2
@@ -188,7 +199,10 @@ class FindShape(inkex.EffectExtension):
         if self.options.findrescale:
             raise NotImplementedError  #TODO
         elif self.options.findresize:
-            raise NotImplementedError  #TODO
+            # for the points, scale target to match template
+            scale = target.resize_to(self.shape, return_inverse=True)
+            # for the transform, scale template to match target before undoing centering
+            transform = transform @ scale
 
         if self.options.findflip and self.options.findrotate:
             flip_rotate = target.flip_and_rotate_to(self.shape, return_inverse=True)
