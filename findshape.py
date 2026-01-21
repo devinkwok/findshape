@@ -30,10 +30,25 @@ from inkex import Use, ShapeElement, Transform
 from lxml import etree
 
 
+def str2bool(arg):
+    str_arg = str(arg).lower()
+    logging.debug(str_arg)
+    return str_arg != "false" and str_arg != "0"
+
+
 class FindShape(inkex.EffectExtension):
-    def add_arguments(self, pars):
-        pars.add_argument("--maxerr", type=float, default=0)
-        pars.add_argument("--avgerr", type=float, default=0)
+    def add_arguments(self, parser):
+        parser.add_argument("--findrotate", type=str2bool, default=True)
+        parser.add_argument("--findflip", type=str2bool, default=True)
+        parser.add_argument("--findresize", type=str2bool, default=True)
+        parser.add_argument("--findrescale", type=str2bool, default=True)
+        parser.add_argument("--findtype", type=str, default="nodes only")
+        parser.add_argument("--maxerr", type=float, default=0)
+        parser.add_argument("--avgerr", type=float, default=0)
+        parser.add_argument("--replace", type=str2bool, default=False)
+        parser.add_argument("--delete", type=str2bool, default=False)
+        parser.add_argument("--replacetype", type=str, default="clone")
+        parser.add_argument("--replacewhere", type=str, default="same parent as match")
 
     def effect(self):
         logging.debug(f'{self.svg.selection}')
@@ -155,4 +170,5 @@ if __name__ == "__main__":
     logging.basicConfig(filename='debug-log-findshape.txt', filemode='w', format='%(levelname)s: %(message)s', level=logging.DEBUG)
     logging.debug(f'python exec: {sys.executable}')
     logging.debug(f'cwd: {os.getcwd()}')
+    logging.debug(f'cmd args: {sys.argv}')
     FindShape().run()

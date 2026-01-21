@@ -6,9 +6,43 @@
     <param name="infotext" type="description" xml:space="preserve">
         Find objects or paths with the same or similar shape as the selected object or path.
     </param>
-    <param name="maxerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Maximum error at any given point for matching duplicates">0.1</param>
-    <param name="avgerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Average error allowed for matching duplicates">0.01</param>
-    <param name="unitinfo" type="description">Unit as defined in document (File->Document Properties).</param>
+    <label appearance="header" xml:space="preserve">Find</label>
+    <vbox xml:space="preserve">
+        <param name="findrotate" indent="4" type="boolean" _gui-text="Rotated">true</param>
+        <param name="findflip" indent="4" type="boolean" _gui-text="Flipped">true</param>
+        <param name="findresize" indent="4" type="boolean" _gui-text="Resized (same aspect ratio)">true</param>
+        <param name="findrescale" indent="4" type="boolean" _gui-text="Rescaled">true</param>
+        <spacer size="10"/>
+        <param name="findtype" indent="4" type="optiongroup" appearance="radio" _gui-text="Match...">
+            <option>nodes only</option>
+            <option>nodes and handles</option>
+        </param>
+    </vbox>
+    <spacer size="10"/>
+    <label appearance="header" xml:space="preserve">Tolerance</label>
+    <vbox xml:space="preserve">
+        <param name="maxerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Max distance between any points">0.1</param>
+        <param name="avgerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Max distance over all points">0.1</param>
+        <param name="unitinfo" type="description" indent="4">Unit as defined in document (File->Document Properties).</param>
+    </vbox>
+    <spacer size="10"/>
+    <label appearance="header" xml:space="preserve">Replace</label>
+    <vbox xml:space="preserve">
+        <param name="replace" indent="4" type="boolean" _gui-text="Copy template to matches">false</param>
+        <param name="delete" indent="4" type="boolean" _gui-text="Delete matches">false</param>
+    </vbox>
+    <spacer size="10"/>
+    <vbox xml:space="preserve">
+        <param name="replacetype" indent="4" type="optiongroup" appearance="radio" _gui-text="Copy as...">
+            <option>clone</option>
+            <option>duplicate</option>
+        </param>
+        <param name="replacewhere" indent="4" type="optiongroup" appearance="radio" _gui-text="Copy to...">
+            <option>same parent as match</option>
+            <option>new group (current layer)</option>
+            <option>new layer</option>
+        </param>
+    </vbox>
     <effect>
         <object-type>any</object-type>
         <effects-menu>
