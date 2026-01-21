@@ -53,8 +53,6 @@ class FindShape(inkex.EffectExtension):
     def effect(self):
         logging.debug(f'{self.svg.selection}')
         logging.debug(f'args: {self.options}')
-        self.maxerr = self.options.maxerr
-        self.avgerr = self.options.avgerr
 
         # get template
         elements = self.svg.selection.filter_nonzero(ShapeElement)
@@ -74,20 +72,47 @@ class FindShape(inkex.EffectExtension):
         self.template_transform =  (-template_translate) @ template_transform
 
         # look for other objects in file that match template
-        clones = []
+        matches = []
         for child in self.svg.descendants():
             if child != self.template:
                 logging.debug(f'comparing... {child.get_id()} {type(child)}')
                 transform = self.match_object(child)
                 if transform is not None:
-                    clones.append(transform)
+                    matches.append((child, transform))
 
-        # add container to root
-        if len(clones) > 0:
-            group_id = self.svg.get_unique_id(f'{self.template.get_id()}-duplicates')
-            clone_group = etree.SubElement(self.svg.get_current_layer(), 'g', {'id': group_id})
-            for transform in clones:
-                self.make_clone(clone_group, transform)
+        if len(matches) == 0:
+            raise ValueError("No matches found")
+
+        # add container for copies if needed
+        if self.options.replace:
+            container_id = self.svg.get_unique_id(f'{self.template.get_id()}-duplicates')
+            if self.options.replacewhere == "same parent as match":
+                copy_container = None
+            elif self.options.replacewhere == "new group (current layer)":
+                copy_container = etree.SubElement(self.svg.get_current_layer(), 'g', {'id': container_id})
+                self.svg.selection.add(copy_container.get_id())
+            elif self.options.replacewhere == "new layer":
+                copy_container = inkex.Layer(id=container_id)
+                self.svg.append(copy_container)
+
+        # create copies and/or delete matches
+        for child, transform in matches:
+            if self.options.replace:
+                container = child.getparent() if copy_container is None else copy_container
+                logging.debug(f'copy {child.get_id()} to {container.get_id()}')
+
+                if self.options.replacetype == "clone":
+                    copy = self.make_clone(container, transform)
+                elif self.options.replacetype == "duplicate":
+                    raise NotImplementedError()
+
+                if copy_container is not None:
+                    self.svg.selection.add(copy.get_id())
+
+            if self.options.delete:
+                child.getparent().remove(child)
+            else:
+                self.svg.selection.add(child.get_id())
 
     @staticmethod
     def center_path(object):
@@ -142,12 +167,12 @@ class FindShape(inkex.EffectExtension):
         # check error (distance between path points)
         transformed_template = R @ self.template_nodes
         mean_error = np.mean((transformed_template - nodes)**2)**0.5
-        if mean_error > self.avgerr:
-            logging.debug(f'average error exceeds {self.avgerr}: {mean_error}')
+        if mean_error > self.options.avgerr:
+            logging.debug(f'average error exceeds {self.options.avgerr}: {mean_error}')
             return None
         max_error = np.max(np.abs(transformed_template - nodes))
-        if max_error > self.maxerr:
-            logging.debug(f'average error exceeds {self.maxerr}: {max_error}' )
+        if max_error > self.options.maxerr:
+            logging.debug(f'average error exceeds {self.options.maxerr}: {max_error}' )
             return None
 
         # compose final transform: transform template to origin, match via procrustes, then undo centering
@@ -160,7 +185,7 @@ class FindShape(inkex.EffectExtension):
         id = self.svg.get_unique_id(f'{self.template.get_id()}-clone')
         # use the Use class from inkex as it nicely formats the transform matrix into a rotation command
         clone = Use.new(self.template, 0, 0, id=id, transform=transform)
-        logging.debug(f'cloning to... {clone.tostring()}')
+        logging.debug(f'cloning as... {clone.tostring()}')
         clone_element = etree.SubElement(clone_group, inkex.addNS('use','svg'), clone.attrib)
         logging.debug(f'{clone_element.tostring()}')
         return clone_element

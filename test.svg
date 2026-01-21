@@ -11,7 +11,6 @@
    sodipodi:docname="test.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
@@ -24,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.46362715"
-     inkscape:cx="291.18226"
-     inkscape:cy="607.16893"
+     inkscape:zoom="0.6556678"
+     inkscape:cx="33.553577"
+     inkscape:cy="799.94777"
      inkscape:window-width="2494"
      inkscape:window-height="1531"
      inkscape:window-x="66"
      inkscape:window-y="32"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      showgrid="false" />
   <defs
      id="defs1" />
@@ -63,29 +62,6 @@
        rx="31.172808"
        cy="19.536726"
        cx="-49.580032" />
-    <rect
-       style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
-       id="rect6-3-7"
-       width="45.397423"
-       height="26.431385"
-       x="-76.38324"
-       y="265.6347" />
-    <path
-       style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
-       d="m -84.398588,310.9254 c 34.50204,44.79212 54.07338,14.12363 53.26631,13.51833 -0.80706,-0.6053 -53.26631,-13.51833 -53.26631,-13.51833 z"
-       id="path1-5-0" />
-    <path
-       style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
-       d="m -54.227578,357.15836 c -21.574,30.58979 20.45904,31.66712 20.45904,31.66712 l -37.97614,23.09336"
-       id="path5-6-9"
-       sodipodi:nodetypes="ccc" />
-    <ellipse
-       style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
-       id="path8-3"
-       ry="6.8936534"
-       rx="31.172808"
-       cy="243.7505"
-       cx="-52.869354" />
     <path
        id="rect14"
        style="fill:#0000ff;stroke:#000080;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"
@@ -214,6 +190,37 @@
        style="fill:#ff0000;stroke:#800000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"
        d="m 84.050703,249.59577 c 1.7e-5,3.80726 -13.956521,6.89366 -31.172801,6.89366 -17.21626,0 -31.1728,-3.08639 -31.17281,-6.89365 -10e-6,-3.80726 27.07134,-13.35018 44.28762,-13.35018 17.216258,0 18.057983,9.54292 18.057991,13.35017 z"
        sodipodi:nodetypes="sssss" />
+    <g
+       id="g9"
+       style="fill:#00ff00;stroke:#008000"
+       transform="translate(155.36005,223.96059)">
+      <path
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+         d="m -235.19321,83.287541 c 34.50204,44.792119 54.07338,14.123641 53.26631,13.518341 -0.80706,-0.605301 -53.26631,-13.518341 -53.26631,-13.518341 z"
+         id="path7" />
+      <path
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+         d="m -205.0222,129.52051 c -21.574,30.58979 20.45904,31.66711 20.45904,31.66711 l -37.97614,23.09337"
+         id="path9"
+         sodipodi:nodetypes="ccc" />
+      <g
+         id="g10">
+        <rect
+           style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+           id="rect7"
+           width="45.397423"
+           height="26.431385"
+           x="-227.17786"
+           y="37.996849" />
+        <ellipse
+           style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+           id="ellipse9"
+           ry="6.8936534"
+           rx="31.172808"
+           cy="16.112638"
+           cx="-203.66397" />
+      </g>
+    </g>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -223,34 +230,31 @@
        id="g18"
        transform="matrix(6.12323e-17 1 -1 6.12323e-17 140.998 -81.1564)"
        style="fill:#00ff00;stroke:#008000">
-      <use
-         x="0"
-         y="0"
-         xlink:href="#rect6-3-7"
+      <rect
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
          id="use10"
-         transform="matrix(-1 0 0 1 -12.8048 -193.864)"
-         style="fill:#00ff00;stroke:#008000" />
-      <use
-         x="0"
-         y="0"
-         xlink:href="#path1-5-0"
-         id="use11"
-         transform="matrix(-1 0 0 1 -12.8048 -193.864)"
-         style="fill:#00ff00;stroke:#008000" />
-      <use
-         x="0"
-         y="0"
-         xlink:href="#path5-6-9"
+         width="45.397423"
+         height="26.431385"
+         x="-63.578438"
+         y="71.770706"
+         transform="scale(-1,1)" />
+      <path
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+         d="m 71.593789,117.0614 c -34.50204,44.79212 -54.07338,14.12363 -53.26631,13.51833 0.80706,-0.6053 53.26631,-13.51833 53.26631,-13.51833 z"
+         id="use11" />
+      <path
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+         d="m 41.422779,163.29436 c 21.574,30.58979 -20.45904,31.66712 -20.45904,31.66712 l 37.97614,23.09336"
          id="use12"
-         transform="matrix(-1 0 0 1 -12.8048 -193.864)"
-         style="fill:#00ff00;stroke:#008000" />
-      <use
-         x="0"
-         y="0"
-         xlink:href="#path8-3"
+         sodipodi:nodetypes="ccc" />
+      <ellipse
+         style="fill:#00ff00;fill-opacity:1;stroke:#008000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
          id="use13"
-         transform="matrix(-1 0 0 1 -12.8048 -193.864)"
-         style="fill:#00ff00;stroke:#008000" />
+         ry="6.8936534"
+         rx="31.172808"
+         cy="49.886505"
+         cx="-40.064552"
+         transform="scale(-1,1)" />
     </g>
   </g>
 </svg>
