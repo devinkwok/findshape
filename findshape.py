@@ -27,7 +27,6 @@ import numpy as np
 
 import inkex
 from inkex import Use, ShapeElement, Transform
-from lxml import etree
 
 
 def str2bool(arg):
@@ -116,6 +115,9 @@ class FindShape(inkex.EffectExtension):
     def effect(self):
         logging.debug(f'{self.svg.selection}')
         logging.debug(f'args: {self.options}')
+        self.container = None
+        self.copy_to_parent = self.options.replacewhere == "same parent as match"
+        self.do_clone = self.options.replacetype == "clone"
 
         # get template
         elements = self.svg.selection.filter_nonzero(ShapeElement)
@@ -135,49 +137,54 @@ class FindShape(inkex.EffectExtension):
         translate_to_center = self.shape.center()
         self.template_transform = translate_to_center @ self.shape.render_transform
 
-        # look for other objects in file that match template
-        matches = []
+        # find objects in file that match template
         for child in self.svg.descendants():
+            # don't match template to itself
             if child == self.template:
-                continue  # don't match template to itself
+                continue
+
             logging.debug(f'comparing... {child.get_id()} {type(child)}')
             transform = self.match_object(child)
-            if transform is not None:
-                matches.append((child, transform))
 
-        if len(matches) == 0:
-            raise ValueError("No matches found")
+            # no match
+            if transform is None:
+                continue
 
-        # add container for copies if needed
-        if self.options.replace:
-            container_id = self.svg.get_unique_id(f'{self.template.get_id()}-duplicates')
-            if self.options.replacewhere == "same parent as match":
-                copy_container = None
-            elif self.options.replacewhere == "new group (current layer)":
-                copy_container = etree.SubElement(self.svg.get_current_layer(), 'g', {'id': container_id})
-                self.svg.selection.add(copy_container.get_id())
-            elif self.options.replacewhere == "new layer":
-                copy_container = inkex.Layer(id=container_id)
-                self.svg.append(copy_container)
-
-        # create copies and/or delete matches
-        for child, transform in matches:
+            # copy template to match
             if self.options.replace:
-                container = child.getparent() if copy_container is None else copy_container
+                container = child.getparent() if self.copy_to_parent else self.get_container()
                 logging.debug(f'copy {child.get_id()} to {container.get_id()}')
 
-                if self.options.replacetype == "clone":
-                    copy = self.copy(container, transform)
-                elif self.options.replacetype == "duplicate":
-                    raise NotImplementedError()
-
-                if copy_container is not None:
+                copy = self.copy(container, transform, clone=self.do_clone)
+                if self.copy_to_parent:
                     self.svg.selection.add(copy.get_id())
 
+            # delete match
             if self.options.delete:
                 child.getparent().remove(child)
             else:
                 self.svg.selection.add(child.get_id())
+
+    def new_id(self, suffix):
+        return self.svg.get_unique_id(f'{self.template.get_id()}-{suffix}')
+
+    def get_container(self):
+        # add container for copies if missing
+        if self.container is None:
+            container_id = self.new_id('copies')
+
+            if self.options.replacewhere == "new group (current layer)":
+                self.container = inkex.Group(id=container_id)
+                self.svg.get_current_layer().append(self.container)
+            elif self.options.replacewhere == "new layer":
+                self.container = inkex.Layer(id=container_id)
+                self.svg.append(self.container)
+            else:
+                raise RuntimeError(f"Invalid option for copy container: {self.options.replacewhere}")
+
+            self.svg.selection.add(container_id)
+
+        return self.container
 
     def match_object(self, object) -> np.ndarray:
         try:
@@ -222,14 +229,17 @@ class FindShape(inkex.EffectExtension):
         logging.info(f'found match: {transform}')
         return transform
 
-    def copy(self, clone_group, transform: Transform):
-        id = self.svg.get_unique_id(f'{self.template.get_id()}-clone')
-        # use the Use class from inkex as it nicely formats the transform matrix into a rotation command
-        clone = Use.new(self.template, 0, 0, id=id, transform=transform)
-        logging.debug(f'cloning as... {clone.tostring()}')
-        clone_element = etree.SubElement(clone_group, inkex.addNS('use','svg'), clone.attrib)
-        logging.debug(f'{clone_element.tostring()}')
-        return clone_element
+    def copy(self, parent, transform: Transform, clone=False):
+        id = self.new_id('clone' if clone else 'duplicate')
+        if clone:
+            # use the Use class from inkex as it nicely formats the transform matrix into a rotation command
+            copy_element = Use.new(self.template, 0, 0, id=id, transform=transform)
+        else:
+            copy_element = self.template.duplicate()
+            copy_element.transform = transform
+        parent.append(copy_element)
+        logging.debug(f'copied {copy_element.tostring()}')
+        return copy_element
 
 
 if __name__ == "__main__":
