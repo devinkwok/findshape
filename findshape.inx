@@ -38,9 +38,9 @@
             <option>duplicate</option>
         </param>
         <param name="replacewhere" indent="4" type="optiongroup" appearance="radio" _gui-text="Copy to...">
-            <option>same parent as match</option>
-            <option>new group (current layer)</option>
             <option>new layer</option>
+            <option>new group (current layer)</option>
+            <option>same parent as match</option>
         </param>
     </vbox>
     <effect>
