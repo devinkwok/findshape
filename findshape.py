@@ -30,7 +30,7 @@ from inkex import Use, ShapeElement, Transform
 from lxml import etree
 
 
-class DuplicatesToClones(inkex.EffectExtension):
+class FindShape(inkex.EffectExtension):
     def add_arguments(self, pars):
         pars.add_argument("--maxerr", type=float, default=0)
         pars.add_argument("--avgerr", type=float, default=0)
@@ -152,7 +152,7 @@ class DuplicatesToClones(inkex.EffectExtension):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='debug-log-duplicates_to_clones.txt', filemode='w', format='%(levelname)s: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename='debug-log-findshape.txt', filemode='w', format='%(levelname)s: %(message)s', level=logging.DEBUG)
     logging.debug(f'python exec: {sys.executable}')
     logging.debug(f'cwd: {os.getcwd()}')
-    DuplicatesToClones().run()
+    FindShape().run()
