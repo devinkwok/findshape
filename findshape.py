@@ -31,18 +31,20 @@ from inkex import Use, ShapeElement, Transform
 
 def str2bool(arg):
     str_arg = str(arg).lower()
-    logging.debug(str_arg)
     return str_arg != "false" and str_arg != "0"
 
 
 class Shape:
-    def __init__(self, object):
+    def __init__(self, object, reverse_path=False):
         self.object = object
         self.path = object.get_path()
         self.render_transform = object.composed_transform()
 
         points = [self.render_transform.apply_to_point(vec2d) for vec2d in self.path.end_points]
+        # 2xn, dim 0 is x, y, dim 1 is nodes
         self.points = np.array([[vec2d.x, vec2d.y] for vec2d in points]).T
+        if reverse_path:
+            self.points = np.flip(self.points, axis=1)
         self.centroid = np.mean(self.points, axis=1, keepdims=True)
 
     @staticmethod
@@ -99,6 +101,8 @@ class Shape:
 
 
 class FindShape(inkex.EffectExtension):
+    FINDABLE_OBJECTS = [inkex.PathElement, inkex.Rectangle, inkex.Use]
+
     def add_arguments(self, parser):
         parser.add_argument("--findrotate", type=str2bool, default=True)
         parser.add_argument("--findflip", type=str2bool, default=True)
@@ -112,58 +116,9 @@ class FindShape(inkex.EffectExtension):
         parser.add_argument("--replacetype", type=str, default="clone")
         parser.add_argument("--replacewhere", type=str, default="same parent as match")
 
-    def effect(self):
-        logging.debug(f'{self.svg.selection}')
-        logging.debug(f'args: {self.options}')
-        self.container = None
-        self.copy_to_parent = self.options.replacewhere == "same parent as match"
-        self.do_clone = self.options.replacetype == "clone"
-
-        # get template
-        elements = self.svg.selection.filter_nonzero(ShapeElement)
-        if len(elements) != 1:
-            logging.error(f'selection contains more than one valid object: {elements}')
-            raise ValueError("Must select one object as template.")
-
-        self.template = elements[0]
-        try:
-            logging.debug(f'template {elements[0].tostring()}')
-            self.shape = Shape(self.template)
-        except Exception as e:
-            logging.error(f'could not get path from selection: {e}\n{self.shape}')
-            raise ValueError("Selected object must be a path.")
-        # cache this transform: move template to rendered location, then center it
-        # note: transforms are applied right to left
-        translate_to_center = self.shape.center()
-        self.template_transform = translate_to_center @ self.shape.render_transform
-
-        # find objects in file that match template
-        for child in self.svg.descendants():
-            # don't match template to itself
-            if child == self.template:
-                continue
-
-            logging.debug(f'comparing... {child.get_id()} {type(child)}')
-            transform = self.match_object(child)
-
-            # no match
-            if transform is None:
-                continue
-
-            # copy template to match
-            if self.options.replace:
-                container = child.getparent() if self.copy_to_parent else self.get_container()
-                logging.debug(f'copy {child.get_id()} to {container.get_id()}')
-
-                copy = self.copy(container, transform, clone=self.do_clone)
-                if self.copy_to_parent:
-                    self.svg.selection.add(copy.get_id())
-
-            # delete match
-            if self.options.delete:
-                child.getparent().remove(child)
-            else:
-                self.svg.selection.add(child.get_id())
+    def is_findable_object(self, object) -> bool:
+        logging.debug(f'{[isinstance(object, obj_type) for obj_type in self.FINDABLE_OBJECTS]}')
+        return any(isinstance(object, obj_type) for obj_type in self.FINDABLE_OBJECTS)
 
     def new_id(self, suffix):
         return self.svg.get_unique_id(f'{self.template.get_id()}-{suffix}')
@@ -186,9 +141,9 @@ class FindShape(inkex.EffectExtension):
 
         return self.container
 
-    def match_object(self, object) -> np.ndarray:
+    def match_object(self, object, reverse_path=False) -> np.ndarray:
         try:
-            target = Shape(object)
+            target = Shape(object, reverse_path=reverse_path)
         except Exception as e:
             logging.debug(f'could not get path of object: {e}')
             return None
@@ -240,6 +195,60 @@ class FindShape(inkex.EffectExtension):
         parent.append(copy_element)
         logging.debug(f'copied {copy_element.tostring()}')
         return copy_element
+
+    def effect(self):
+        logging.debug(f'{self.svg.selection}')
+        logging.debug(f'args: {self.options}')
+        self.container = None
+        self.template = None
+        self.copy_to_parent = self.options.replacewhere == "same parent as match"
+        self.do_clone = self.options.replacetype == "clone"
+
+        # get template
+        elements = self.svg.selection.filter_nonzero(ShapeElement)
+        if len(elements) != 1:
+            logging.error(f'selection contains more than one valid object: {elements}')
+            raise ValueError("Must select one object as template.")
+
+        self.template = elements[0]
+        if not self.is_findable_object(self.template):
+            raise ValueError(f"Selected object {type(self.template)} must be one of {self.FINDABLE_OBJECTS}.")
+        self.shape = Shape(self.template)
+
+        # cache this transform: move template to rendered location, then center it
+        # note: transforms are applied right to left
+        translate_to_center = self.shape.center()
+        self.template_transform = translate_to_center @ self.shape.render_transform
+
+        # find objects in file that match template
+        for child in self.svg.descendants():
+            # don't match template to itself
+            if child == self.template or not self.is_findable_object(self.template):
+                continue
+
+            logging.debug(f'comparing... {child.get_id()} {type(child)}')
+            transform = self.match_object(child)
+            if transform is None:
+                transform = self.match_object(child, reverse_path=True)
+            if transform is None:
+            # no match
+                continue
+
+            # copy template to match
+            if self.options.replace:
+                container = child.getparent() if self.copy_to_parent else self.get_container()
+                container.bake_transforms_recursively()
+                logging.debug(f'copy {child.get_id()} to {container.get_id()}')
+
+                copy = self.copy(container, transform, clone=self.do_clone)
+                if self.copy_to_parent:
+                    self.svg.selection.add(copy.get_id())
+
+            # delete match
+            if self.options.delete:
+                child.getparent().remove(child)
+            else:
+                self.svg.selection.add(child.get_id())
 
 
 if __name__ == "__main__":
