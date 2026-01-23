@@ -35,12 +35,23 @@ def str2bool(arg):
 
 
 class Shape:
-    def __init__(self, object, reverse_path=False):
+    def __init__(self, object, reverse_path=False, include_handles=True):
         self.object = object
-        self.path = object.get_path()
+        self.path = object.get_path().to_superpath()
         self.render_transform = object.composed_transform()
+        # only allow shapes with single subpath
+        if len(self.path) > 1:
+            raise ValueError(f'Can only compare connected shapes (those with a single subpath): {self.path}')
+        self.path = self.path[0]
 
-        points = [self.render_transform.apply_to_point(vec2d) for vec2d in self.path.end_points]
+        # superpath is 4 nested lists: subpaths, segments, [handle point handle], [x y]
+        # note: closed curves have the same first and last points, this will cause problems if cycling the points
+        if include_handles:  # include all 3 points per segment
+            points = [p for segment in self.path for p in segment]
+        else:  # only include the node point
+            points = [p for _, p, _ in self.path]
+        points = [self.render_transform.apply_to_point(p) for p in points]
+
         # 2xn, dim 0 is x, y, dim 1 is nodes
         self.points = np.array([[vec2d.x, vec2d.y] for vec2d in points]).T
         if reverse_path:
@@ -101,7 +112,7 @@ class Shape:
 
 
 class FindShape(inkex.EffectExtension):
-    FINDABLE_OBJECTS = [inkex.PathElement, inkex.Rectangle, inkex.Use]
+    FINDABLE_OBJECTS = [inkex.PathElement, inkex.Rectangle, inkex.Use, inkex.Ellipse, inkex.Circle]
 
     def add_arguments(self, parser):
         parser.add_argument("--findrotate", type=str2bool, default=True)
@@ -117,7 +128,6 @@ class FindShape(inkex.EffectExtension):
         parser.add_argument("--replacewhere", type=str, default="same parent as match")
 
     def is_findable_object(self, object) -> bool:
-        logging.debug(f'{[isinstance(object, obj_type) for obj_type in self.FINDABLE_OBJECTS]}')
         return any(isinstance(object, obj_type) for obj_type in self.FINDABLE_OBJECTS)
 
     def new_id(self, suffix):
@@ -143,7 +153,7 @@ class FindShape(inkex.EffectExtension):
 
     def match_object(self, object, reverse_path=False) -> np.ndarray:
         try:
-            target = Shape(object, reverse_path=reverse_path)
+            target = Shape(object, reverse_path=reverse_path, include_handles=self.include_handles)
         except Exception as e:
             logging.debug(f'could not get path of object: {e}')
             return None
@@ -203,6 +213,7 @@ class FindShape(inkex.EffectExtension):
         self.template = None
         self.copy_to_parent = self.options.replacewhere == "same parent as match"
         self.do_clone = self.options.replacetype == "clone"
+        self.include_handles = self.options.findtype == "nodes and handles"
 
         # get template
         elements = self.svg.selection.filter_nonzero(ShapeElement)
@@ -213,7 +224,8 @@ class FindShape(inkex.EffectExtension):
         self.template = elements[0]
         if not self.is_findable_object(self.template):
             raise ValueError(f"Selected object {type(self.template)} must be one of {self.FINDABLE_OBJECTS}.")
-        self.shape = Shape(self.template)
+        self.shape = Shape(self.template, include_handles=self.include_handles)
+        logging.debug(f"template: {self.template.tostring()}\n{self.shape.points}")
 
         # cache this transform: move template to rendered location, then center it
         # note: transforms are applied right to left
@@ -223,7 +235,7 @@ class FindShape(inkex.EffectExtension):
         # find objects in file that match template
         for child in self.svg.descendants():
             # don't match template to itself
-            if child == self.template or not self.is_findable_object(self.template):
+            if child == self.template or not self.is_findable_object(child):
                 continue
 
             logging.debug(f'comparing... {child.get_id()} {type(child)}')
