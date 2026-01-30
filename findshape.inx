@@ -3,48 +3,46 @@
     <name>Find Shape</name>
     <id>devinkwok.findshape</id>
     <dependency type="executable" location="inx">findshape.py</dependency>
-    <param name="infotext" type="description" xml:space="preserve">
+    <label xml:space="preserve">
         Find objects or paths with the same or similar shape as the selected object or path.
-    </param>
+    </label>
     <label appearance="header" xml:space="preserve">Find</label>
-    <vbox xml:space="preserve">
-        <param name="findrotate" indent="4" type="boolean" _gui-text="Rotated">true</param>
-        <param name="findflip" indent="4" type="boolean" _gui-text="Flipped">true</param>
-        <param name="findresize" indent="4" type="boolean" _gui-text="Resized (same aspect ratio)">true</param>
-        <param name="findrescale" indent="4" type="boolean" _gui-text="Rescaled">true</param>
+    <vbox>
+        <param name="findrotateflip" indent="4" type="bool" gui-text="Rotated/flipped">true</param>
+        <param name="findresize" indent="4" type="bool" gui-text="Resized (same aspect ratio)">true</param>
         <spacer size="10"/>
-        <param name="findtype" indent="4" type="optiongroup" appearance="radio" _gui-text="Match...">
-            <option>nodes only</option>
-            <option>nodes and handles</option>
+        <param name="findtype" indent="4" type="optiongroup" appearance="radio" gui-text="Match...">
+            <option>Nodes only</option>
+            <option>Nodes and handles</option>
         </param>
     </vbox>
     <spacer size="10"/>
     <label appearance="header" xml:space="preserve">Tolerance</label>
-    <vbox xml:space="preserve">
-        <param name="maxerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Max distance between any points">0.1</param>
-        <param name="avgerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" _gui-text="Max distance over all points">0.1</param>
-        <param name="unitinfo" type="description" indent="4">Unit as defined in document (File->Document Properties).</param>
+    <vbox>
+        <param name="maxerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" gui-text="Max distance between any points">0.1</param>
+        <param name="avgerr" indent="4" type="float" precision="3" min="0" max="1000" appearance="full" gui-text="Max distance over all points">0.1</param>
+        <label xml:space="preserve">Unit as defined in document (File-&gt;Document Properties).</label>
     </vbox>
     <spacer size="10"/>
     <label appearance="header" xml:space="preserve">Replace</label>
-    <vbox xml:space="preserve">
-        <param name="replace" indent="4" type="boolean" _gui-text="Copy template to matches">false</param>
-        <param name="delete" indent="4" type="boolean" _gui-text="Delete matches">false</param>
+    <vbox>
+        <param name="replace" indent="4" type="bool" gui-text="Copy template to matches">false</param>
+        <param name="delete" indent="4" type="bool" gui-text="Delete matches">false</param>
     </vbox>
     <spacer size="10"/>
-    <vbox xml:space="preserve">
-        <param name="replacetype" indent="4" type="optiongroup" appearance="radio" _gui-text="Copy as...">
-            <option>clone</option>
-            <option>duplicate</option>
+    <vbox>
+        <param name="replacetype" indent="4" type="optiongroup" appearance="radio" gui-text="Copy as...">
+            <option>Clone</option>
+            <option>Duplicate</option>
         </param>
-        <param name="replacewhere" indent="4" type="optiongroup" appearance="radio" _gui-text="Copy to...">
-            <option>new layer</option>
-            <option>new group (current layer)</option>
-            <option>same parent as match</option>
+        <param name="replacewhere" indent="4" type="optiongroup" appearance="radio" gui-text="Copy to...">
+            <option>New layer</option>
+            <option>New group (current layer)</option>
+            <option>Same parent as match</option>
         </param>
     </vbox>
     <effect>
-        <object-type>any</object-type>
+        <object-type>all</object-type>
         <effects-menu>
             <submenu name="Arrange"/>
         </effects-menu>

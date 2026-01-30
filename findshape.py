@@ -41,7 +41,8 @@ class Shape:
         self.render_transform = object.composed_transform()
         # only allow shapes with single subpath
         if len(self.path) > 1:
-            raise ValueError(f'Can only compare connected shapes (those with a single subpath): {self.path}')
+            logging.error(f"Can only compare shapes made from a single path.")
+            raise ValueError(f"Can only compare shapes made from a single path.")
         self.path = self.path[0]
 
         # superpath is 4 nested lists: subpaths, segments, [handle point handle], [x y]
@@ -67,7 +68,7 @@ class Shape:
         t_x = translate[0, 0] if translate is not None else 0
         t_y = translate[1, 0] if translate is not None else 0
         transform = Transform((a * size, b * size, c * size, d * size, t_x * size, t_y * size))
-        logging.debug(f'transform {size} {matrix} {translate}, {transform}')
+        logging.debug(f"transform {size} {matrix} {translate}, {transform}")
         return transform
 
     def get_id(self):
@@ -96,7 +97,7 @@ class Shape:
         u, _, vT = np.linalg.svd(shape.points @ self.points.T)
         R = u @ vT
         if not np.all(np.isfinite(R)):
-            logging.info(f'NaN or infinity in transformation: {R}')
+            logging.info(f"NaN or infinity in transformation: {R}")
             return self.make_transform()
         self.points = R @ self.points
         if return_inverse:
@@ -107,7 +108,7 @@ class Shape:
         diff = self.points - shape.points
         mean_err = np.mean(diff**2)**0.5
         max_err = np.max(np.abs(diff))
-        logging.debug(f'mean_err {mean_err}, max_err {max_err}' )
+        logging.debug(f"mean_err {mean_err}, max_err {max_err}" )
         return mean_err <= mean_tolerance and max_err <= max_tolerance
 
 
@@ -115,10 +116,8 @@ class FindShape(inkex.EffectExtension):
     FINDABLE_OBJECTS = [inkex.PathElement, inkex.Rectangle, inkex.Use, inkex.Ellipse, inkex.Circle]
 
     def add_arguments(self, parser):
-        parser.add_argument("--findrotate", type=str2bool, default=True)
-        parser.add_argument("--findflip", type=str2bool, default=True)
+        parser.add_argument("--findrotateflip", type=str2bool, default=True)
         parser.add_argument("--findresize", type=str2bool, default=True)
-        parser.add_argument("--findrescale", type=str2bool, default=True)
         parser.add_argument("--findtype", type=str, default="nodes only")
         parser.add_argument("--maxerr", type=float, default=0)
         parser.add_argument("--avgerr", type=float, default=0)
@@ -131,20 +130,21 @@ class FindShape(inkex.EffectExtension):
         return any(isinstance(object, obj_type) for obj_type in self.FINDABLE_OBJECTS)
 
     def new_id(self, suffix):
-        return self.svg.get_unique_id(f'{self.template.get_id()}-{suffix}')
+        return self.svg.get_unique_id(f"{self.template.get_id()}-{suffix}")
 
     def get_container(self):
         # add container for copies if missing
         if self.container is None:
-            container_id = self.new_id('copies')
+            container_id = self.new_id("copies")
 
-            if self.options.replacewhere == "new group (current layer)":
+            if self.options.replacewhere.lower() == "new group (current layer)":
                 self.container = inkex.Group(id=container_id)
                 self.svg.get_current_layer().append(self.container)
-            elif self.options.replacewhere == "new layer":
+            elif self.options.replacewhere.lower() == "new layer":
                 self.container = inkex.Layer(id=container_id)
                 self.svg.append(self.container)
             else:
+                logging.error(f"Invalid option for copy container: {self.options.replacewhere}")
                 raise RuntimeError(f"Invalid option for copy container: {self.options.replacewhere}")
 
             self.svg.selection.add(container_id)
@@ -155,12 +155,12 @@ class FindShape(inkex.EffectExtension):
         try:
             target = Shape(object, reverse_path=reverse_path, include_handles=self.include_handles)
         except Exception as e:
-            logging.debug(f'could not get path of object: {e}')
+            logging.debug(f"could not get path of object: {e}")
             return None
 
         # check if path has same number of points
         if target.points.shape != self.shape.points.shape:
-            logging.debug(f'number of points differs: {target.points.shape} and {self.shape.points.shape}')
+            logging.debug(f"number of points differs: {target.points.shape} and {self.shape.points.shape}")
             return None
 
         # we want the template -> target transform, so undo centering
@@ -168,34 +168,28 @@ class FindShape(inkex.EffectExtension):
         transform = target.center(return_inverse=True)
 
         # align template to locations of target nodes
-        if self.options.findrescale:
-            raise NotImplementedError  #TODO
-        elif self.options.findresize:
+        if self.options.findresize:
             # for the points, scale target to match template
             scale = target.resize_to(self.shape, return_inverse=True)
             # for the transform, scale template to match target before undoing centering
             transform = transform @ scale
 
-        if self.options.findflip and self.options.findrotate:
+        if  self.options.findrotateflip:
             flip_rotate = target.flip_and_rotate_to(self.shape, return_inverse=True)
             transform = transform @ flip_rotate
-        elif self.options.findflip:
-            raise NotImplementedError  #TODO
-        elif self.options.findrotate:
-            raise NotImplementedError  #TODO
 
         # check error (distance between path points)
         if not target.is_similar(self.shape, self.options.avgerr, self.options.maxerr):
-            logging.debug(f'error exceeds avg {self.options.avgerr} or max {self.options.maxerr}')
+            logging.debug(f"error exceeds avg {self.options.avgerr} or max {self.options.maxerr}")
             return None
 
         # final transform is template -> rendered template -> centered template -> align template to target (flip, rotate, scale, etc.) -> undo centering of target
         transform = transform @ self.template_transform
-        logging.info(f'found match: {transform}')
+        logging.debug(f"found match: {transform}")
         return transform
 
     def copy(self, parent, transform: Transform, clone=False):
-        id = self.new_id('clone' if clone else 'duplicate')
+        id = self.new_id("clone" if clone else "duplicate")
         if clone:
             # use the Use class from inkex as it nicely formats the transform matrix into a rotation command
             copy_element = Use.new(self.template, 0, 0, id=id, transform=transform)
@@ -203,26 +197,27 @@ class FindShape(inkex.EffectExtension):
             copy_element = self.template.duplicate()
             copy_element.transform = transform
         parent.append(copy_element)
-        logging.debug(f'copied {copy_element.tostring()}')
+        logging.debug(f"copied {copy_element.tostring()}")
         return copy_element
 
     def effect(self):
-        logging.debug(f'{self.svg.selection}')
-        logging.debug(f'args: {self.options}')
+        logging.debug(f"{self.svg.selection}")
+        logging.debug(f"args: {self.options}")
         self.container = None
         self.template = None
-        self.copy_to_parent = self.options.replacewhere == "same parent as match"
-        self.do_clone = self.options.replacetype == "clone"
-        self.include_handles = self.options.findtype == "nodes and handles"
+        self.copy_to_parent = self.options.replacewhere.lower() == "same parent as match"
+        self.do_clone = self.options.replacetype.lower() == "clone"
+        self.include_handles = self.options.findtype.lower() == "nodes and handles"
 
         # get template
         elements = self.svg.selection.filter_nonzero(ShapeElement)
         if len(elements) != 1:
-            logging.error(f'selection contains more than one valid object: {elements}')
+            logging.error(f"selection contains more than one valid object: {elements}")
             raise ValueError("Must select one object as template.")
 
         self.template = elements[0]
         if not self.is_findable_object(self.template):
+            logging.error(f"Selected object {type(self.template)} must be one of {self.FINDABLE_OBJECTS}.")
             raise ValueError(f"Selected object {type(self.template)} must be one of {self.FINDABLE_OBJECTS}.")
         self.shape = Shape(self.template, include_handles=self.include_handles)
         logging.debug(f"template: {self.template.tostring()}\n{self.shape.points}")
@@ -234,11 +229,11 @@ class FindShape(inkex.EffectExtension):
 
         # find objects in file that match template
         for child in self.svg.descendants():
-            # don't match template to itself
+            # don"t match template to itself
             if child == self.template or not self.is_findable_object(child):
                 continue
 
-            logging.debug(f'comparing... {child.get_id()} {type(child)}')
+            logging.debug(f"comparing... {child.get_id()} {type(child)}")
             transform = self.match_object(child)
             if transform is None:
                 transform = self.match_object(child, reverse_path=True)
@@ -250,7 +245,7 @@ class FindShape(inkex.EffectExtension):
             if self.options.replace:
                 container = child.getparent() if self.copy_to_parent else self.get_container()
                 container.bake_transforms_recursively()
-                logging.debug(f'copy {child.get_id()} to {container.get_id()}')
+                logging.debug(f"copy {child.get_id()} to {container.get_id()}")
 
                 copy = self.copy(container, transform, clone=self.do_clone)
                 if self.copy_to_parent:
@@ -264,8 +259,9 @@ class FindShape(inkex.EffectExtension):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='debug-log-findshape.txt', filemode='w', format='%(levelname)s: %(message)s', level=logging.DEBUG)
-    logging.debug(f'python exec: {sys.executable}')
-    logging.debug(f'cwd: {os.getcwd()}')
-    logging.debug(f'cmd args: {sys.argv}')
+    logging.basicConfig(filename="debug-log-findshape.txt", filemode="w", format="%(levelname)s: %(message)s", level=logging.DEBUG)
+    logging.disable(logging.DEBUG)  # remove this line for debugging
+    logging.debug(f"python exec: {sys.executable}")
+    logging.debug(f"cwd: {os.getcwd()}")
+    logging.debug(f"cmd args: {sys.argv}")
     FindShape().run()
