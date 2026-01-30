@@ -5,11 +5,17 @@ Inkscape extension to find similar or identical shapes in a SVG document.
 
 ## Development
 
-Run the following to validate the extension XML:
+Run `findshape.py --version` to get the current version.
 
+Run the following to validate the extension XML:
 ```
 curl https://gitlab.com/inkscape/extensions/-/raw/master/inkex/tester/inkscape.extension.rng -o inkscape.extension.rng
 jing inkscape.extension.rng findshape.inx
+```
+
+To make a downloadable zip file of the extension, run:
+```
+zip findshape.zip findshape.inx findshape.py LICENSE README.md
 ```
 
 

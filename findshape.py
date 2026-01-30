@@ -29,6 +29,9 @@ import inkex
 from inkex import Use, ShapeElement, Transform
 
 
+VERSION = "0.1.0"
+
+
 def str2bool(arg):
     str_arg = str(arg).lower()
     return str_arg != "false" and str_arg != "0"
@@ -261,6 +264,7 @@ class FindShape(inkex.EffectExtension):
 if __name__ == "__main__":
     logging.basicConfig(filename="debug-log-findshape.txt", filemode="w", format="%(levelname)s: %(message)s", level=logging.DEBUG)
     logging.disable(logging.DEBUG)  # remove this line for debugging
+    logging.debug(f"Find Shape {VERSION}")
     logging.debug(f"python exec: {sys.executable}")
     logging.debug(f"cwd: {os.getcwd()}")
     logging.debug(f"cmd args: {sys.argv}")
